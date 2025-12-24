@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>念念不忘</title>
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#1b2a45;
+      --card: rgba(255,255,255,.10);
+      --card2: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --accent:#ff6aa7;
+      --accent2:#8fd3ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(255,106,167,.18), transparent 60%),
+                  radial-gradient(1000px 700px at 80% 30%, rgba(143,211,255,.16), transparent 60%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+    .wrap{
+      max-width:860px;
+      margin:0 auto;
+      padding: 18px 16px 40px;
+      padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    }
+    header{
+      padding: 14px 4px 6px;
+      text-align:center;
+    }
+    .title{
+      font-size: 22px;
+      letter-spacing: .06em;
+      margin: 8px 0 6px;
+      font-weight: 650;
+    }
+    .subtitle{
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0 0 10px;
+      line-height: 1.6;
+    }
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 20px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.32);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    @media (max-width: 820px){
+      .grid{grid-template-columns: 1fr; }
+    }
+    .left, .right{ padding: 16px; }
+    .poem{
+      padding: 14px 16px;
+      margin-top: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      line-height: 1.9;
+      color: rgba(255,255,255,.88);
+      font-size: 15px;
+      white-space: pre-line;
+    }
+    .sig{
+      margin-top: 10px;
+      color: var(--muted);
+      text-align:right;
+      font-size: 13px;
+    }
+
+    .counter{
+      padding: 14px 14px 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.07));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+    }
+    .counter h3{
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: .06em;
+      color: rgba(255,255,255,.82);
+      font-weight: 650;
+    }
+    .time{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .tbox{
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 10px 8px;
+      text-align:center;
+    }
+    .num{
+      font-size: 22px;
+      font-weight: 760;
+      letter-spacing: .02em;
+      margin-bottom: 2px;
+    }
+    .lab{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .album{
+      margin-top: 14px;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+    }
+    .albumTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .albumTop .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height:1.5;
+    }
+    .viewer{
+      position: relative;
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(0,0,0,.24);
+      border: 1px solid rgba(255,255,255,.10);
+      aspect-ratio: 4 / 3;
+    }
+    img.photo{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      transform: scale(1.02);
+      filter: contrast(1.04) saturate(1.05);
+    }
+    .fade{
+      animation: fadeIn .55s ease;
+    }
+    @keyframes fadeIn{
+      from{opacity:.0; transform: scale(1.04);}
+      to{opacity:1; transform: scale(1.02);}
+    }
+    .caption{
+      position:absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      line-height: 1.6;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .controls{
+      display:flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button{
+      border:0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+      background: linear-gradient(135deg, rgba(255,106,167,.75), rgba(143,211,255,.55));
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+      cursor:pointer;
+      flex: 1;
+    }
+    button.secondary{
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: none;
+    }
+    .footerNote{
+      margin-top: 14px;
+      text-align:center;
+      color: rgba(255,255,255,.70);
+      font-size: 12px;
+      line-height:1.7;
+    }
+
+    /* 烟花画布 */
+    canvas#fx{
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      pointer-events: none;
+    }
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.40);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 13px;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      max-width: 92vw;
+    }
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="title">我和 <span id="herName">的</span> 的小宇宙</div>
+    <div class="subtitle" id="subLine">愿我们把平凡的日子，过成只属于彼此的诗。</div>
+  </header>
+
+  <div class="card">
+    <div class="grid">
+      <div class="left">
+        <div class="poem" id="poem">
+你像冬夜里的一盏灯，
+不喧哗，却让人安心。
+
+我想把所有温柔，
+都慢慢给你——
+从今天，到很久很久以后。
+        </div>
+        <div class="sig">—— <span id="mySig">我</span></div>
+
+        <div class="footerNote">
+          小提示：点一下「放烟花」会更酷 ✨（iPhone 需要你点一下才允许播放音乐/动画更顺）
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="counter">
+          <h3>我们在一起已经</h3>
+          <div class="time">
+            <div class="tbox"><div class="num" id="d">0</div><div class="lab">天</div></div>
+            <div class="tbox"><div class="num" id="h">0</div><div class="lab">小时</div></div>
+            <div class="tbox"><div class="num" id="m">0</div><div class="lab">分钟</div></div>
+            <div class="tbox"><div class="num" id="s">0</div><div class="lab">秒</div></div>
+          </div>
+        </div>
+
+        <div class="album">
+          <div class="albumTop">
+            <div>
+              <div style="font-weight:650; letter-spacing:.06em;">相册回忆</div>
+              <div class="hint">向左/右滑动图片也可以（手机更爽）</div>
+            </div>
+            <div style="font-size:12px; color: var(--muted);" id="idx">1 / 1</div>
+          </div>
+
+          <div class="viewer" id="viewer">
+            <img class="photo fade" id="photo" src="" alt="我们的照片"/>
+            <div class="caption" id="cap"></div>
+          </div>
+
+          <div class="controls">
+            <button class="secondary" id="prev">上一张</button>
+            <button id="fire">放烟花</button>
+            <button class="secondary" id="next">下一张</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast">🎆</div>
+
+<script>
+  /********************
+   * 0) 你需要改的内容
+   ********************/
+  const CONFIG = {
+    herName: "（刘念）",           // ← 改这里
+    mySig: "（唐德威）",            // ← 改这里
+    // 在一起开始时间（越精确越浪漫）："2024-01-01T20:30:00"
+    since: "2025-05-30T22:00:00",      // ← 改这里（ISO格式）
+    subtitle: "愿我们把平凡的日子，过成只属于彼此的诗。",
+    poem: `你像冬夜里的一盏灯，
+不喧哗，却让人安心。
+
+我想把所有温柔，
+都慢慢给你——
+从今天，到很久很久以后。`,
+    // 1) 把你的照片放到同目录的 photos 文件夹里
+    // 2) 然后在这里写文件名与文案
+    photos: [
+      { src: "photos/01.jpg", cap: "那天的风很轻，你的笑很亮。" },
+      { src: "photos/02.jpg", cap: "你回头的一瞬间，我就知道完了。" },
+      { src: "photos/03.jpg", cap: "这一天，时间都慢了一点。" },
+      { src: "photos/04.jpg", cap: "我喜欢你笑起来的样子。" },
+      { src: "photos/05.jpg", cap: "和你在一起，世界很安静。" },
+      { src: "photos/06.jpg", cap: "路灯下，我们并肩走着。" },
+      { src: "photos/07.jpg", cap: "你的手，很暖。" },
+      { src: "photos/08.jpg", cap: "我希望这样的日子有很多很多。" }
+    ]
+  };
+
+  document.getElementById("herName").textContent = CONFIG.herName;
+  document.getElementById("mySig").textContent = CONFIG.mySig;
+  document.getElementById("subLine").textContent = CONFIG.subtitle;
+  document.getElementById("poem").textContent = CONFIG.poem;
+
+  /********************
+   * 1) 计时器
+   ********************/
+  const sinceMs = new Date(CONFIG.since).getTime();
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  function tick(){
+    const now = Date.now();
+    let diff = Math.max(0, now - sinceMs);
+    const d = Math.floor(diff / (24*3600*1000)); diff -= d*24*3600*1000;
+    const h = Math.floor(diff / (3600*1000)); diff -= h*3600*1000;
+    const m = Math.floor(diff / (60*1000)); diff -= m*60*1000;
+    const s = Math.floor(diff / 1000);
+    document.getElementById("d").textContent = d;
+    document.getElementById("h").textContent = pad2(h);
+    document.getElementById("m").textContent = pad2(m);
+    document.getElementById("s").textContent = pad2(s);
+  }
+  tick(); setInterval(tick, 1000);
+
+  /********************
+   * 2) 相册
+   ********************/
+  let cur = 0;
+  const photoEl = document.getElementById("photo");
+  const capEl = document.getElementById("cap");
+  const idxEl = document.getElementById("idx");
+
+  function show(i){
+    const n = CONFIG.photos.length;
+    cur = (i + n) % n;
+    const it = CONFIG.photos[cur];
+    photoEl.classList.remove("fade"); void photoEl.offsetWidth; photoEl.classList.add("fade");
+    photoEl.src = it.src;
+    capEl.textContent = it.cap;
+    idxEl.textContent = `${cur+1} / ${n}`;
+  }
+
+  // 预加载图片（更顺）
+  CONFIG.photos.forEach(p => { const im = new Image(); im.src = p.src; });
+  show(0);
+
+  document.getElementById("prev").onclick = () => show(cur - 1);
+  document.getElementById("next").onclick = () => show(cur + 1);
+
+  // 手势滑动
+  const viewer = document.getElementById("viewer");
+  let startX = null;
+  viewer.addEventListener("touchstart", (e)=>{ startX = e.touches[0].clientX; }, {passive:true});
+  viewer.addEventListener("touchend", (e)=>{
+    if(startX == null) return;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+    startX = null;
+    if(Math.abs(dx) < 28) return;
+    if(dx > 0) show(cur - 1); else show(cur + 1);
+  }, {passive:true});
+
+  /********************
+   * 3) 烟花（Canvas）
+   ********************/
+  const canvas = document.getElementById("fx");
+  const ctx = canvas.getContext("2d");
+  function resize(){
+    const dpr = Math.max(1, Math.min(2.2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const particles = [];
+  function rand(a,b){ return a + Math.random()*(b-a); }
+
+  function burst(x,y){
+    const count = Math.floor(rand(60, 90));
+    const hueBase = rand(320, 360); // 偏粉紫
+    for(let i=0;i<count;i++){
+      const ang = rand(0, Math.PI*2);
+      const spd = rand(2.2, 6.2);
+      particles.push({
+        x, y,
+        vx: Math.cos(ang)*spd,
+        vy: Math.sin(ang)*spd,
+        g: rand(0.04, 0.085),
+        life: rand(55, 95),
+        age: 0,
+        r: rand(1.2, 2.4),
+        hue: (hueBase + rand(-20, 30)) % 360,
+        a: rand(0.75, 1.0)
+      });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    // 轻微拖影
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
+
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.age++;
+      p.vy += p.g;
+      p.x += p.vx;
+      p.y += p.vy;
+      const t = p.age / p.life;
+      const alpha = p.a * (1 - t);
+      if(alpha <= 0 || p.age >= p.life){
+        particles.splice(i,1);
+        continue;
+      }
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${p.hue}, 95%, 70%, ${alpha})`;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    requestAnimationFrame(step);
+  }
+  step();
+
+  const toast = document.getElementById("toast");
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.remove("hidden");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toast.classList.add("hidden"), 1600);
+  }
+
+  document.getElementById("fire").onclick = (e) => {
+    // iPhone 上建议用点击触发动画更顺
+    const x = rand(80, window.innerWidth-80);
+    const y = rand(120, window.innerHeight*0.55);
+    burst(x,y);
+    burst(rand(80, window.innerWidth-80), rand(120, window.innerHeight*0.55));
+    showToast("🎆 给你一整个宇宙的浪漫");
+  };
+
+  // 轻轻自动来一发（不打扰）
+  setTimeout(()=>burst(window.innerWidth*0.5, window.innerHeight*0.32), 700);
+</script>
+</body>
+</html>
