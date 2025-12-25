@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>念念不忘 | Our Little Universe</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- React & Babel Setup -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Styles -->
+    <style>
+        /* Theme Variables */
+        :root {
+          --bg-deep: #0b1020;
+          --bg-gradient-start: #0f172a;
+          --bg-gradient-end: #1e1b4b; /* Deep Indigo */
+          
+          --glass-surface: rgba(255, 255, 255, 0.03);
+          --glass-border: rgba(255, 255, 255, 0.08);
+          --glass-highlight: rgba(255, 255, 255, 0.05);
+          
+          --text-primary: rgba(255, 255, 255, 0.95);
+          --text-secondary: rgba(255, 255, 255, 0.65);
+          --text-muted: rgba(255, 255, 255, 0.4);
+          
+          --accent-soft: #ffafcc; /* Gentle Pink */
+          --accent-gold: #e2b714; /* Muted Gold */
+          --accent-glow: rgba(255, 175, 204, 0.3);
+
+          --font-serif: 'Noto Serif SC', 'Playfair Display', serif;
+          --font-sans: 'Inter', -apple-system, sans-serif;
+          
+          --easing-premium: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+          margin: 0;
+          padding: 0;
+          min-height: 100vh;
+          background: radial-gradient(circle at 20% 0%, rgba(30, 27, 75, 0.4), transparent 50%),
+                      radial-gradient(circle at 80% 100%, rgba(255, 106, 167, 0.08), transparent 50%),
+                      linear-gradient(180deg, var(--bg-gradient-start), var(--bg-deep));
+          color: var(--text-primary);
+          font-family: var(--font-sans);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        #root {
+          position: relative;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+          font-family: var(--font-serif);
+          font-weight: 500;
+          margin: 0;
+          letter-spacing: 0.02em;
+        }
+
+        /* Layout Container */
+        .app-container {
+          width: 100%;
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 24px 20px 120px;
+          position: relative;
+          z-index: 10;
+        }
+
+        /* Glass Component Utility */
+        .glass-panel {
+          background: var(--glass-surface);
+          backdrop-filter: blur(24px) saturate(120%);
+          -webkit-backdrop-filter: blur(24px) saturate(120%);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+          overflow: hidden;
+          transition: transform 0.4s var(--easing-premium), box-shadow 0.4s var(--easing-premium);
+        }
+
+        .glass-panel:hover {
+          border-color: rgba(255, 255, 255, 0.12);
+          box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Header */
+        header {
+          text-align: center;
+          margin-bottom: 40px;
+          padding-top: 20px;
+          animation: fadeDown 1.2s var(--easing-premium) forwards;
+        }
+
+        .main-title {
+          font-size: 2rem;
+          color: var(--text-primary);
+          margin-bottom: 8px;
+          text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .main-title span {
+          font-style: italic;
+          color: var(--accent-soft);
+          font-weight: 400;
+        }
+
+        .subtitle {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          letter-spacing: 0.05em;
+          font-family: var(--font-sans);
+          opacity: 0.8;
+        }
+
+        /* Bento Grid */
+        .bento-grid {
+          display: grid;
+          grid-template-columns: 1.4fr 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+
+        @media (max-width: 860px) {
+          .bento-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
+        }
+
+        /* Gallery */
+        .gallery-section {
+          position: relative;
+          aspect-ratio: 4/3;
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+          animation: fadeUp 1s var(--easing-premium) 0.2s forwards;
+          opacity: 0;
+        }
+
+        .gallery-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transform: scale(1.05);
+          display: block;
+        }
+
+        .gallery-section:hover .gallery-image {
+          transform: scale(1.0);
+        }
+
+        .gallery-overlay {
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          padding: 80px 24px 24px;
+          background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+          color: white;
+          pointer-events: none;
+        }
+
+        .gallery-caption {
+          font-family: var(--font-serif);
+          font-size: 1.1rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.95);
+          transform: translateY(10px);
+          animation: slideUpFade 0.6s var(--easing-premium) forwards;
+        }
+
+        .gallery-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: white;
+          width: 44px; height: 44px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          backdrop-filter: blur(8px);
+          transition: all 0.3s;
+          z-index: 20;
+          opacity: 0;
+        }
+        .gallery-section:hover .gallery-nav-btn { opacity: 1; }
+        .gallery-nav-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-50%) scale(1.1); }
+        .gallery-nav-btn.prev { left: 16px; }
+        .gallery-nav-btn.next { right: 16px; }
+
+        /* Info Column */
+        .info-column {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          animation: fadeUp 1s var(--easing-premium) 0.4s forwards;
+          opacity: 0;
+        }
+
+        /* Counter */
+        .counter-card {
+          padding: 32px 24px;
+          text-align: center;
+        }
+
+        .counter-label {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          margin-bottom: 20px;
+        }
+
+        .counter-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+
+        .time-unit {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .time-value {
+          font-family: var(--font-sans);
+          font-size: 2rem;
+          font-weight: 300;
+          color: var(--accent-gold);
+          line-height: 1;
+          margin-bottom: 6px;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .time-label {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+
+        /* Poem */
+        .poem-card {
+          padding: 32px 28px;
+          position: relative;
+        }
+
+        .poem-text {
+          font-family: var(--font-serif);
+          font-size: 1.05rem;
+          line-height: 2.2;
+          color: var(--text-primary);
+          white-space: pre-line;
+          margin-bottom: 24px;
+        }
+
+        .poem-sig {
+          text-align: right;
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          font-style: italic;
+        }
+
+        /* Music Bar */
+        .music-bar {
+          position: fixed;
+          bottom: 24px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: calc(100% - 40px);
+          max-width: 500px;
+          background: rgba(15, 23, 42, 0.8);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid var(--glass-border);
+          padding: 12px 20px;
+          border-radius: 99px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+          z-index: 100;
+          animation: slideUp 0.8s var(--easing-premium) 0.6s forwards;
+          opacity: 0;
+        }
+
+        .music-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          overflow: hidden;
+        }
+
+        .music-icon-spin {
+          animation: spin 6s linear infinite;
+          opacity: 0.8;
+        }
+
+        .music-details {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .music-title {
+          font-size: 0.85rem;
+          color: var(--text-primary);
+          white-space: nowrap;
+          font-weight: 500;
+        }
+
+        .music-status {
+          font-size: 0.7rem;
+          color: var(--accent-soft);
+        }
+
+        .music-controls {
+          display: flex;
+          gap: 8px;
+        }
+
+        .control-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+          background: rgba(255,255,255,0.1);
+        }
+
+        .control-btn.primary {
+          background: var(--text-primary);
+          color: var(--bg-deep);
+        }
+        .control-btn.primary:hover {
+          background: #fff;
+          transform: scale(1.05);
+        }
+
+        /* Canvas */
+        #fireworks-canvas {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 999;
+        }
+
+        /* Animations */
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 40px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useCallback } from 'react';
+        import { createRoot } from 'react-dom/client';
+
+        /* === CONFIG === */
+        const CONFIG = {
+            herName: "（刘念）",
+            mySig: "（唐德威）",
+            since: "2025-05-30T22:00:00",
+            subtitle: "愿我们把平凡的日子，过成只属于彼此的诗。",
+            poem: `你像冬夜里的一盏灯，
+不喧哗，却让人安心。
+
+我想把所有温柔，
+都慢慢给你——
+从今天，到很久很久以后。`,
+            photos: [
+                { src: "photos/01.jpg", cap: "那天的风很轻，你的笑很亮。" },
+                { src: "photos/02.jpg", cap: "你回头的一瞬间，我就知道完了。" },
+                { src: "photos/03.jpg", cap: "这一天，时间都慢了一点。" },
+                { src: "photos/04.jpg", cap: "我喜欢你笑起来的样子。" },
+                { src: "photos/05.jpg", cap: "和你在一起，世界很安静。" },
+                { src: "photos/06.jpg", cap: "路灯下，我们并肩走着。" },
+                { src: "photos/07.jpg", cap: "你的手，很暖。" },
+                { src: "photos/08.jpg", cap: "我希望这样的日子有很多很多。" }
+            ],
+            musics: [
+                { src: "我只在乎你.mp3", name: "我只在乎你" },
+                { src: "至少还有你.mp3", name: "至少还有你" }
+            ],
+            volume: 0.6
+        };
+
+        /* === ICONS === */
+        const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l11-7z"/></svg>);
+        const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>);
+        const NextIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>);
+        const ChevronLeftIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>);
+        const ChevronRightIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>);
+        const MusicNoteIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>);
+        const SparklesIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>);
+
+        /* === COMPONENTS === */
+
+        const TimeCapsule = () => {
+            const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+
+            useEffect(() => {
+                const sinceMs = new Date(CONFIG.since).getTime();
+                const tick = () => {
+                    const now = Date.now();
+                    let diff = Math.max(0, now - sinceMs);
+                    
+                    const d = Math.floor(diff / (24*3600*1000)); diff -= d*24*3600*1000;
+                    const h = Math.floor(diff / (3600*1000)); diff -= h*3600*1000;
+                    const m = Math.floor(diff / (60*1000)); diff -= m*60*1000;
+                    const s = Math.floor(diff / 1000);
+                    
+                    setTimeLeft({ d, h, m, s });
+                };
+                const timer = setInterval(tick, 1000);
+                tick();
+                return () => clearInterval(timer);
+            }, []);
+
+            const format = (n) => String(n).padStart(2, '0');
+
+            return (
+                <div className="glass-panel counter-card">
+                    <div className="counter-label">We have been together for</div>
+                    <div className="counter-grid">
+                        <div className="time-unit">
+                            <span className="time-value">{timeLeft.d}</span>
+                            <span className="time-label">DAYS</span>
+                        </div>
+                        <div className="time-unit">
+                            <span className="time-value">{format(timeLeft.h)}</span>
+                            <span className="time-label">HOURS</span>
+                        </div>
+                        <div className="time-unit">
+                            <span className="time-value">{format(timeLeft.m)}</span>
+                            <span className="time-label">MIN</span>
+                        </div>
+                        <div className="time-unit">
+                            <span className="time-value">{format(timeLeft.s)}</span>
+                            <span className="time-label">SEC</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Gallery = ({ photos }) => {
+            const [index, setIndex] = useState(0);
+            const [isFading, setIsFading] = useState(false);
+            
+            useEffect(() => {
+                photos.forEach(p => { const img = new Image(); img.src = p.src; });
+            }, [photos]);
+
+            const changePhoto = useCallback((newIndex) => {
+                if (isFading) return;
+                setIsFading(true);
+                setTimeout(() => {
+                    setIndex((newIndex + photos.length) % photos.length);
+                    setIsFading(false);
+                }, 300);
+            }, [isFading, photos.length]);
+
+            const next = () => changePhoto(index + 1);
+            const prev = () => changePhoto(index - 1);
+
+            const touchStart = useRef(null);
+            const onTouchStart = (e) => touchStart.current = e.touches[0].clientX;
+            const onTouchEnd = (e) => {
+                if (!touchStart.current) return;
+                const diff = e.changedTouches[0].clientX - touchStart.current;
+                if (Math.abs(diff) > 50) {
+                    diff > 0 ? prev() : next();
+                }
+                touchStart.current = null;
+            };
+
+            const currentPhoto = photos[index];
+
+            return (
+                <div 
+                    className="glass-panel gallery-section"
+                    onTouchStart={onTouchStart}
+                    onTouchEnd={onTouchEnd}
+                >
+                    <img 
+                        src={currentPhoto.src} 
+                        alt="Memory" 
+                        className="gallery-image"
+                        style={{ opacity: isFading ? 0 : 1 }}
+                    />
+                    
+                    <button className="gallery-nav-btn prev" onClick={(e) => {e.stopPropagation(); prev();}}>
+                        <ChevronLeftIcon />
+                    </button>
+                    <button className="gallery-nav-btn next" onClick={(e) => {e.stopPropagation(); next();}}>
+                        <ChevronRightIcon />
+                    </button>
+
+                    <div className="gallery-overlay">
+                        <div className="gallery-caption" key={index}>
+                            {currentPhoto.cap}
+                        </div>
+                        <div style={{ marginTop: 8, fontSize: '0.75rem', opacity: 0.6, letterSpacing: '0.05em' }}>
+                            MEMORY {index + 1} / {photos.length}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MusicPlayer = ({ onFireworks }) => {
+            const [playing, setPlaying] = useState(false);
+            const [trackIdx, setTrackIdx] = useState(0);
+            const audioRef = useRef(null);
+
+            useEffect(() => {
+                const audio = new Audio();
+                audio.volume = CONFIG.volume;
+                audio.loop = true;
+                audioRef.current = audio;
+                return () => { audio.pause(); };
+            }, []);
+
+            useEffect(() => {
+                if (audioRef.current) {
+                    const wasPlaying = !audioRef.current.paused;
+                    audioRef.current.src = CONFIG.musics[trackIdx].src;
+                    if (wasPlaying || playing) {
+                         audioRef.current.play().catch(() => setPlaying(false));
+                    }
+                }
+            }, [trackIdx]);
+
+            const togglePlay = () => {
+                if (!audioRef.current) return;
+                if (playing) {
+                    audioRef.current.pause();
+                } else {
+                    audioRef.current.play().catch(e => console.log("Playback prevented", e));
+                }
+                setPlaying(!playing);
+            };
+
+            const nextSong = () => {
+                setTrackIdx((prev) => (prev + 1) % CONFIG.musics.length);
+                setPlaying(true);
+            };
+
+            return (
+                <div className="music-bar">
+                    <div className="music-info">
+                        <div className={`music-icon-circle ${playing ? 'music-icon-spin' : ''}`} 
+                             style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <MusicNoteIcon />
+                        </div>
+                        <div className="music-details">
+                            <span className="music-title">{CONFIG.musics[trackIdx].name}</span>
+                            <span className="music-status">{playing ? 'Playing' : 'Paused'}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="music-controls">
+                        <button className="control-btn" onClick={onFireworks} title="Fireworks">
+                            <SparklesIcon />
+                        </button>
+                        <button className="control-btn" onClick={nextSong} title="Next Song">
+                            <NextIcon />
+                        </button>
+                        <button className="control-btn primary" onClick={togglePlay}>
+                            {playing ? <PauseIcon /> : <PlayIcon />}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const FireworksCanvas = ({ trigger }) => {
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                let particles = [];
+                let animationId = 0;
+
+                const resize = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                window.addEventListener('resize', resize);
+                resize();
+
+                const createParticle = (x, y) => {
+                    const hue = Math.random() * 40 + 320; 
+                    return {
+                        x, y,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: (Math.random() - 0.5) * 6,
+                        life: 100 + Math.random() * 50,
+                        color: `hsla(${hue}, 80%, 70%,`,
+                        alpha: 1,
+                        gravity: 0.05
+                    };
+                };
+
+                const burst = () => {
+                     const x = Math.random() * canvas.width;
+                     const y = Math.random() * (canvas.height * 0.6);
+                     for(let i=0; i<80; i++) particles.push(createParticle(x, y));
+                };
+
+                if (trigger > 0) {
+                    burst();
+                    setTimeout(burst, 300); 
+                }
+
+                const loop = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    for (let i = particles.length - 1; i >= 0; i--) {
+                        const p = particles[i];
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += p.gravity;
+                        p.life--;
+                        p.alpha = Math.max(0, p.life / 100);
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = `${p.color} ${p.alpha})`;
+                        ctx.fill();
+
+                        if (p.life <= 0) particles.splice(i, 1);
+                    }
+                    
+                    animationId = requestAnimationFrame(loop);
+                };
+                loop();
+
+                return () => {
+                    cancelAnimationFrame(animationId);
+                    window.removeEventListener('resize', resize);
+                };
+            }, [trigger]);
+
+            return <canvas id="fireworks-canvas" ref={canvasRef} />;
+        };
+
+        function App() {
+            const [fireworkTrigger, setFireworkTrigger] = useState(0);
+
+            const handleFireworks = () => {
+                setFireworkTrigger(prev => prev + 1);
+            };
+
+            return (
+                <div className="app-container">
+                    <FireworksCanvas trigger={fireworkTrigger} />
+                    
+                    <header>
+                        <h1 className="main-title">
+                            我和 <span>{CONFIG.herName}</span> 的小宇宙
+                        </h1>
+                        <div className="subtitle">{CONFIG.subtitle}</div>
+                    </header>
+
+                    <div className="bento-grid">
+                        <Gallery photos={CONFIG.photos} />
+                        
+                        <div className="info-column">
+                            <TimeCapsule />
+                            
+                            <div className="glass-panel poem-card">
+                                <div className="poem-text">{CONFIG.poem}</div>
+                                <div className="poem-sig">—— {CONFIG.mySig}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <MusicPlayer onFireworks={handleFireworks} />
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
