@@ -365,7 +365,7 @@
     cur = (i + n) % n;
     const it = CONFIG.photos[cur];
     photoEl.classList.remove("fade"); void photoEl.offsetWidth; photoEl.classList.add("fade");
-    photoEl.src = it.src + "?v=" + Date.now();
+    photoEl.src = it.src;
     capEl.textContent = it.cap;
     idxEl.textContent = `${cur+1} / ${n}`;
   }
@@ -478,4 +478,5 @@
 </script>
 </body>
 </html>
+
 
