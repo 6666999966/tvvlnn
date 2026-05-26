@@ -23,17 +23,36 @@
 
     * { box-sizing: border-box; }
 
-    html { scroll-behavior: smooth; }
+    html {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
+      width: 100%;
+      max-width: 100%;
       min-height: 100vh;
       color: var(--ink);
       font-family: var(--sans);
       background: var(--black);
       overflow-x: hidden;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
+    }
+
+    main {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-x: clip;
+      isolation: isolate;
     }
 
     button {
@@ -48,7 +67,7 @@
     #warpCanvas {
       position: fixed;
       inset: 0;
-      width: 100vw;
+      width: 100%;
       height: 100vh;
       z-index: -3;
       background: transparent;
@@ -57,6 +76,8 @@
     .space-bg {
       position: fixed;
       inset: 0;
+      width: 100%;
+      max-width: 100%;
       z-index: -4;
       pointer-events: none;
       background:
@@ -219,12 +240,20 @@
     .warp {
       min-height: 100svh;
       position: relative;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      overflow: clip;
     }
 
     .warp-stage {
       position: relative;
       height: 100svh;
+      width: 100%;
+      max-width: 100%;
       overflow: hidden;
+      overflow: clip;
+      contain: layout paint;
       perspective: 1300px;
       transform-style: preserve-3d;
       touch-action: pan-y;
@@ -368,6 +397,9 @@
       transform-style: preserve-3d;
       pointer-events: auto;
       transition: box-shadow .24s ease, border-color .24s ease;
+      backface-visibility: hidden;
+      will-change: transform, opacity, filter;
+      contain: layout paint style;
     }
 
     .memory.current {
@@ -382,6 +414,7 @@
       display: block;
       filter: saturate(1.04) contrast(1.04);
       transform: scale(1.03);
+      backface-visibility: hidden;
     }
 
     .memory::after {
@@ -526,8 +559,8 @@
     }
 
     .soundtrack.open {
-      width: min(330px, calc(100vw - 36px));
-      height: 86px;
+      width: min(260px, calc(100% - 36px));
+      height: 72px;
       border-radius: 28px;
       border: 1px solid rgba(255,244,240,.13);
       background:
@@ -660,8 +693,7 @@
     .track {
       min-width: 0;
       flex: 1 1 auto;
-      display: grid;
-      gap: 8px;
+      display: block;
     }
 
     .track strong {
@@ -676,22 +708,6 @@
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0;
-    }
-
-    .volume-wrap {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px;
-      align-items: center;
-      color: rgba(255, 242, 238, .42);
-      font-size: 10px;
-      letter-spacing: .12em;
-    }
-
-    .volume-wrap input {
-      width: 100%;
-      accent-color: var(--rose);
-      opacity: .76;
     }
 
     .track-next {
@@ -862,12 +878,12 @@
       }
 
       .soundtrack.open {
-        width: min(306px, calc(100vw - 32px));
-        height: 86px;
+        width: min(236px, calc(100% - 32px));
+        height: 72px;
       }
 
       .memory {
-        width: min(72vw, 330px);
+        width: min(70vw, 318px);
         top: 54%;
       }
 
@@ -916,10 +932,6 @@
           <button class="play" id="play" type="button" aria-label="播放音乐"><span class="play-icon" aria-hidden="true"></span></button>
           <div class="track">
             <strong id="trackName">我只在乎你</strong>
-            <label class="volume-wrap" for="volumeControl">
-              <span>VOL</span>
-              <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.62" aria-label="音量">
-            </label>
           </div>
           <button class="track-next" id="nextTrack" type="button" aria-label="下一首"><span class="next-icon" aria-hidden="true"></span></button>
         </div>
@@ -945,10 +957,10 @@
                 </svg>
               </span>
             </button>
-            <button class="filter active" type="button" data-world="eating" aria-label="吃的" aria-pressed="true" title="吃的">
+            <button class="filter" type="button" data-world="eating" aria-label="吃的" aria-pressed="false" title="吃的">
               <span class="category-icon food" aria-hidden="true">🍚</span>
             </button>
-            <button class="filter active" type="button" data-world="lucky" aria-label="Lucky" aria-pressed="true" title="Lucky">
+            <button class="filter" type="button" data-world="lucky" aria-label="Lucky" aria-pressed="false" title="Lucky">
               <span class="category-icon lucky" aria-hidden="true">
                 <svg viewBox="0 0 32 32">
                   <path d="M7.3 12.4 5.2 6.1l6.2 3.1"/>
@@ -1074,12 +1086,11 @@
       soundtrack: document.getElementById("soundtrack"),
       musicToggle: document.getElementById("musicToggle"),
       play: document.getElementById("play"),
-      trackName: document.getElementById("trackName"),
-      volume: document.getElementById("volumeControl")
+      trackName: document.getElementById("trackName")
     };
 
     let memories = [];
-    let selectedWorlds = new Set(["us", "eating", "lucky"]);
+    let selectedWorlds = new Set(["us"]);
     let activeTrack = 0;
     let currentPosition = 0;
     let targetPosition = 0;
@@ -1089,10 +1100,14 @@
     let dragStartPosition = 0;
     let dragDistance = 0;
     let suppressCardClick = false;
+    let tunnelBuilt = false;
+    let initialPhotosPreloaded = false;
 
-    const audio = new Audio(tracks[0].src);
+    const audio = new Audio();
+    audio.preload = "none";
     audio.volume = .62;
     audio.loop = true;
+    audio.src = tracks[0].src;
 
     function pad(value) {
       return String(value).padStart(2, "0");
@@ -1124,6 +1139,44 @@
       return worldKeys
         .flatMap((worldKey) => worlds[worldKey].files.map((file) => parseMemory(worldKey, file)))
         .sort((a, b) => a.sort.localeCompare(b.sort));
+    }
+
+    function preloadInitialPhotos() {
+      if (initialPhotosPreloaded) return;
+      initialPhotosPreloaded = true;
+      const preload = () => {
+        memoriesFor(["us"]).slice(0, 4).forEach((memory) => {
+          const image = new Image();
+          image.decoding = "async";
+          image.loading = "eager";
+          image.src = memory.src;
+        });
+      };
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(preload, { timeout: 1800 });
+      } else {
+        window.setTimeout(preload, 900);
+      }
+    }
+
+    function initTunnelWhenNeeded() {
+      if (!("IntersectionObserver" in window)) {
+        buildTunnel(false);
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        if (!tunnelBuilt) buildTunnel(false);
+      }, { rootMargin: "0px 0px -20% 0px" });
+      observer.observe(refs.warp);
+    }
+
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) return;
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
     }
 
     function updateTime() {
@@ -1179,6 +1232,7 @@
     }
 
     function buildTunnel(shouldScroll = true) {
+      tunnelBuilt = true;
       const activeKeys = Array.from(selectedWorlds);
       memories = memoriesFor(activeKeys);
       refs.tunnel.innerHTML = "";
@@ -1196,7 +1250,7 @@
         card.type = "button";
         card.dataset.index = index;
         card.innerHTML = `
-          <img src="${memory.src}" alt="${memory.name}" loading="lazy">
+          <img data-src="${memory.src}" alt="${memory.name}" loading="lazy" decoding="async" fetchpriority="${index < 3 ? "high" : "low"}">
           <span class="memory-meta">
             <span class="memory-date">${memory.date} / ${memory.world.toUpperCase()}</span>
             <span class="memory-name">${memory.name}</span>
@@ -1242,22 +1296,34 @@
       setTunnelPosition(base + delta, Math.abs(delta) * .36);
     }
 
+    function loadCardImage(card) {
+      const image = card.querySelector("img[data-src]");
+      if (!image) return;
+      image.src = image.dataset.src;
+      image.removeAttribute("data-src");
+    }
+
     function updateCards() {
       const cards = refs.tunnel.querySelectorAll(".memory");
       const nearest = Math.round(currentPosition);
+      const isNarrow = window.innerWidth <= 760;
+      const visibleLimit = isNarrow ? 3.8 : 5.7;
+      const waveX = isNarrow ? 150 : 310;
+      const stepX = isNarrow ? 62 : 90;
 
       cards.forEach((card) => {
         const index = Number(card.dataset.index);
         const offset = index - currentPosition;
         const distance = Math.abs(offset);
-        const visible = distance < 5.7;
+        const visible = distance < visibleLimit;
 
         card.hidden = !visible;
         if (!visible) return;
+        loadCardImage(card);
 
         const side = offset < 0 ? -1 : 1;
         const abs = Math.abs(offset);
-        const x = Math.sin(offset * .88) * 310 + offset * 90;
+        const x = Math.sin(offset * .88) * waveX + offset * stepX;
         const y = Math.sin(offset * .45) * 62;
         const z = 180 - abs * 360;
         const rotateY = -offset * 12;
@@ -1276,7 +1342,7 @@
     }
 
     function animateTunnel() {
-      currentPosition += (targetPosition - currentPosition) * .085;
+      currentPosition += (targetPosition - currentPosition) * .105;
       updateCards();
       requestAnimationFrame(animateTunnel);
     }
@@ -1336,10 +1402,6 @@
     refs.play.addEventListener("click", () => {
       if (audio.paused) playMusic();
       else pauseMusic();
-    });
-
-    refs.volume.addEventListener("input", () => {
-      audio.volume = Number(refs.volume.value);
     });
 
     document.getElementById("nextTrack").addEventListener("click", () => {
@@ -1561,7 +1623,9 @@
     drawBackground();
     updateTime();
     setInterval(updateTime, 1000);
-    buildTunnel(false);
+    registerServiceWorker();
+    preloadInitialPhotos();
+    initTunnelWhenNeeded();
     window.scrollTo({ top: 0 });
     animateTunnel();
   </script>
