@@ -1,775 +1,1569 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>念念不忘 | Our Little Universe</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>念念不忘</title>
+  <style>
+    :root {
+      --ink: rgba(255, 250, 247, .96);
+      --soft: rgba(255, 242, 238, .68);
+      --dim: rgba(255, 242, 238, .46);
+      --line: rgba(255, 244, 240, .16);
+      --rose: #f0a3c0;
+      --rose-deep: #9f4f73;
+      --blue: #9ec9e8;
+      --gold: #e0cc91;
+      --black: #02030a;
+      --panel: rgba(4, 5, 14, .54);
+      --serif: "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      --number-font: "Bodoni 72", "Didot", "Georgia", "Times New Roman", serif;
+    }
 
-    <!-- React & Babel Setup -->
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
-  }
-}
-</script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    * { box-sizing: border-box; }
 
-    <!-- Styles -->
-    <style>
-        /* Theme Variables */
-        :root {
-          --bg-deep: #07091a;
-          --bg-mid: #0d1032;
+    html { scroll-behavior: smooth; }
 
-          --glass-surface: rgba(30, 25, 60, 0.25);
-          --glass-border: rgba(200, 180, 240, 0.05);
-          --glass-highlight: rgba(200, 180, 240, 0.08);
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--sans);
+      background: var(--black);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
 
-          --text-primary: rgba(255, 255, 255, 0.93);
-          --text-secondary: #9890b8;
-          --text-muted: #7870a8;
+    button {
+      border: 0;
+      color: inherit;
+      font: inherit;
+      background: transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-          --accent-soft: #ffb8c8;
-          --accent-glow: rgba(255, 184, 200, 0.25);
-          --counter-color: #e0d8f8;
-          --aurora-purple: rgba(120, 100, 220, 0.06);
-          --aurora-cyan: rgba(100, 160, 230, 0.04);
-          --star-color: rgba(200, 200, 240, 0.35);
+    #warpCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -3;
+      background: transparent;
+    }
 
-          --font-serif: 'Noto Serif SC', 'Playfair Display', serif;
-          --font-sans: 'Inter', -apple-system, sans-serif;
+    .space-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -4;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(2, 3, 10, .08), rgba(2, 3, 10, .36)),
+        url("./背景图.jfif") center center / cover no-repeat;
+      filter: brightness(.72) contrast(1.05) saturate(1.08);
+      transform: scale(1.035);
+      animation: backgroundDrift 15s ease-in-out infinite alternate;
+    }
 
-          --easing-premium: cubic-bezier(0.22, 1, 0.36, 1);
-        }
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 0 34%, rgba(2,3,10,.18) 58%, rgba(2,3,10,.82) 100%),
+        linear-gradient(180deg, rgba(2,3,10,.08), rgba(2,3,10,.48));
+    }
 
-        * { box-sizing: border-box; }
+    .grain {
+      display: none;
+    }
 
-        body {
-          margin: 0;
-          padding: 0;
-          min-height: 100vh;
-          background: var(--bg-deep);
-          color: var(--text-primary);
-          font-family: var(--font-sans);
-          overflow-x: hidden;
-          -webkit-font-smoothing: antialiased;
-        }
+    .mark {
+      position: fixed;
+      top: max(22px, env(safe-area-inset-top));
+      left: 24px;
+      z-index: 30;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(3, 4, 12, .36);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      color: var(--soft);
+      font-size: 13px;
+    }
 
-        /* Aurora layers */
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          background:
-            radial-gradient(ellipse at 30% 20%, var(--aurora-purple), transparent 50%),
-            radial-gradient(ellipse at 60% 50%, var(--aurora-cyan), transparent 40%),
-            radial-gradient(ellipse at 50% 80%, var(--aurora-purple), transparent 50%);
-          filter: blur(20px);
-          animation: auroraBreath 10s ease-in-out infinite;
-        }
+    .mark::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background: var(--rose);
+      box-shadow: 0 0 18px rgba(240, 163, 192, .7);
+    }
 
-        /* Stars layer */
-        body::after {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          background-image:
-            radial-gradient(1px 1px at 10% 8%, var(--star-color), transparent),
-            radial-gradient(1px 1px at 25% 12%, rgba(220,200,240,0.3), transparent),
-            radial-gradient(1.5px 1.5px at 60% 5%, rgba(200,200,240,0.35), transparent),
-            radial-gradient(1px 1px at 78% 18%, rgba(220,210,240,0.3), transparent),
-            radial-gradient(1px 1px at 90% 8%, rgba(200,200,240,0.4), transparent),
-            radial-gradient(1px 1px at 15% 38%, rgba(180,220,240,0.25), transparent),
-            radial-gradient(1px 1px at 85% 42%, rgba(200,200,240,0.3), transparent),
-            radial-gradient(1px 1px at 45% 55%, rgba(200,200,240,0.25), transparent),
-            radial-gradient(1px 1px at 70% 68%, rgba(210,200,240,0.3), transparent),
-            radial-gradient(1px 1px at 20% 78%, rgba(200,200,240,0.25), transparent),
-            radial-gradient(1px 1px at 55% 88%, rgba(200,210,240,0.3), transparent),
-            radial-gradient(1px 1px at 82% 92%, rgba(220,200,240,0.3), transparent);
-          animation: starTwinkle 4s ease-in-out infinite;
-        }
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 78px 18px 112px;
+      position: relative;
+      text-align: center;
+    }
 
-        #root {
-          position: relative;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          z-index: 1;
-        }
+    .countdown {
+      width: min(100%, 980px);
+      margin: 0 auto;
+    }
 
-        /* Typography */
-        h1, h2, h3, h4 {
-          font-family: var(--font-serif);
-          font-weight: 500;
-          margin: 0;
-          letter-spacing: 0.03em;
-        }
+    .wish {
+      margin: 0 auto 52px;
+      max-width: 680px;
+      color: rgba(255, 242, 238, .76);
+      font-family: var(--serif);
+      font-size: clamp(24px, 3.1vw, 36px);
+      line-height: 1.75;
+      letter-spacing: 0;
+      text-shadow: 0 0 26px rgba(240, 163, 192, .2), 0 0 68px rgba(255, 250, 247, .1);
+    }
 
-        .app-container {
-          width: 100%;
-          max-width: 480px;
-          margin: 0 auto;
-          padding: 32px 20px 120px;
-          position: relative;
-          z-index: 10;
-        }
+    .timer-label {
+      margin: 0 0 16px;
+      color: rgba(255, 242, 238, .58);
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
 
-        .glass-panel {
-          background: var(--glass-surface);
-          -webkit-backdrop-filter: blur(20px);
-          backdrop-filter: blur(20px);
-          border: 1px solid var(--glass-border);
-          border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-          overflow: hidden;
-          transition: border-color 0.4s var(--easing-premium);
-        }
+    .timer {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(10px, 2.2vw, 24px);
+      align-items: end;
+      padding: 20px 0 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
 
-        .glass-panel:hover {
-          border-color: rgba(200, 180, 240, 0.1);
-        }
+    .unit {
+      min-width: 0;
+      padding-bottom: 18px;
+      text-align: center;
+    }
 
-        header {
-          text-align: center;
-          margin-bottom: 28px;
-          animation: fadeDown 1s var(--easing-premium) forwards;
-        }
+    .unit strong {
+      display: block;
+      font-family: var(--number-font);
+      font-size: clamp(52px, 10.4vw, 116px);
+      font-weight: 400;
+      line-height: .82;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      text-shadow: 0 0 24px rgba(255, 250, 247, .18), 0 0 70px rgba(240, 163, 192, .12);
+    }
 
-        .main-title {
-          font-size: 1.5rem;
-          color: var(--text-primary);
-          margin-bottom: 8px;
-          text-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
-          line-height: 1.5;
-        }
+    .unit span {
+      display: block;
+      margin-top: 12px;
+      color: var(--dim);
+      font-size: 12px;
+      text-transform: uppercase;
+      text-align: center;
+    }
 
-        .main-title span {
-          color: var(--accent-soft);
-          font-weight: 500;
-        }
+    .anniversary {
+      min-height: 24px;
+      margin-top: 20px;
+      color: rgba(224, 204, 145, .84);
+      font-size: 15px;
+    }
 
-        .subtitle {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          letter-spacing: 0.04em;
-          font-family: var(--font-sans);
-        }
+    .warp-link {
+      position: absolute;
+      left: 50%;
+      bottom: max(32px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(3, 4, 12, .32);
+      color: var(--soft);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
 
-        .flow-column {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
+    .warp-link::after {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--rose), transparent);
+    }
 
-        .gallery-section {
-          position: relative;
-          aspect-ratio: 4 / 3;
-          border-radius: 16px;
-          overflow: hidden;
-          animation: fadeUp 0.8s var(--easing-premium) 0.15s forwards;
-          opacity: 0;
-        }
+    .warp {
+      min-height: 100svh;
+      position: relative;
+    }
 
-        .gallery-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: opacity 0.5s ease;
-          display: block;
-        }
+    .warp-stage {
+      position: relative;
+      height: 100svh;
+      overflow: hidden;
+      perspective: 1300px;
+      transform-style: preserve-3d;
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: grab;
+    }
 
-        .gallery-overlay {
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          padding: 50px 16px 16px;
-          background: linear-gradient(to top, rgba(7, 9, 26, 0.9), transparent);
-          pointer-events: none;
-        }
+    .warp-stage.dragging {
+      cursor: grabbing;
+    }
 
-        .gallery-caption {
-          font-family: var(--font-serif);
-          font-size: 0.95rem;
-          color: rgba(255, 255, 255, 0.9);
-        }
+    .warp-ui {
+      position: absolute;
+      top: max(82px, calc(env(safe-area-inset-top) + 68px));
+      left: 24px;
+      right: 24px;
+      z-index: 1400;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      pointer-events: none;
+    }
 
-        .gallery-dots {
-          position: absolute;
-          bottom: 8px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 5px;
-          z-index: 20;
-        }
+    .warp-title {
+      pointer-events: auto;
+    }
 
-        .gallery-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.3);
-          transition: background 0.3s;
-        }
+    .warp-title small {
+      color: var(--dim);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
 
-        .gallery-dot.active {
-          background: #fff;
-        }
+    .warp-title h2 {
+      margin: 8px 0 0;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 64px);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0;
+    }
 
-        .gallery-nav-btn {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          background: rgba(30, 25, 60, 0.5);
-          -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
-          border: none;
-          color: rgba(255, 255, 255, 0.7);
-          width: 36px; height: 36px;
-          border-radius: 50%;
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: all 0.3s;
-          z-index: 20;
-          opacity: 0;
-        }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      pointer-events: auto;
+    }
 
-        .gallery-section:hover .gallery-nav-btn { opacity: 1; }
-        .gallery-nav-btn:hover {
-          background: rgba(60, 50, 100, 0.6);
-          color: #fff;
-          transform: translateY(-50%) scale(1.1);
-        }
-        .gallery-nav-btn.prev { left: 12px; }
-        .gallery-nav-btn.next { right: 12px; }
+    .filter {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border-radius: 48% 52% 44% 56% / 56% 42% 58% 44%;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 36% 26%, rgba(255,255,255,.18), transparent 28%),
+        rgba(3, 4, 12, .28);
+      color: var(--soft);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.2);
+      transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
 
-        .counter-card {
-          padding: 24px 16px;
-          text-align: center;
-          animation: fadeUp 0.8s var(--easing-premium) 0.3s forwards;
-          opacity: 0;
-        }
+    .filter.active {
+      color: var(--ink);
+      border-color: rgba(240, 163, 192, .58);
+      background:
+        radial-gradient(circle at 36% 26%, rgba(255,255,255,.24), transparent 28%),
+        rgba(240, 163, 192, .14);
+      box-shadow: 0 0 30px rgba(240, 163, 192, .16), 0 12px 28px rgba(0,0,0,.2);
+      transform: translateY(-1px);
+    }
 
-        .counter-label {
-          font-size: 0.7rem;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin-bottom: 14px;
-        }
+    .category-icon {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      opacity: .82;
+      filter: drop-shadow(0 0 10px rgba(240, 163, 192, .2));
+    }
 
-        .counter-grid {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 6px;
-        }
+    .category-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      fill: none;
+      stroke: rgba(255, 242, 238, .82);
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
-        .time-unit {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          min-width: 52px;
-        }
+    .category-icon.food {
+      font-size: 23px;
+      line-height: 1;
+    }
 
-        .time-colon {
-          color: var(--text-muted);
-          font-size: 1.6rem;
-          font-weight: 300;
-          padding-bottom: 12px;
-        }
+    .filter.active .category-icon {
+      opacity: 1;
+      filter: drop-shadow(0 0 14px rgba(255, 242, 238, .28));
+    }
 
-        .time-value {
-          font-family: var(--font-sans);
-          font-size: 1.8rem;
-          font-weight: 300;
-          color: var(--counter-color);
-          line-height: 1;
-          margin-bottom: 4px;
-          font-variant-numeric: tabular-nums;
-        }
+    .time-tunnel {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
 
-        .time-label {
-          font-size: 0.6rem;
-          color: var(--text-muted);
-          letter-spacing: 1px;
-        }
+    .tunnel-axis {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1px;
+      height: 74vh;
+      transform: translate(-50%, -50%) rotate(28deg);
+      background: linear-gradient(transparent, rgba(240, 163, 192, .28), transparent);
+      box-shadow: 0 0 36px rgba(240, 163, 192, .18);
+      opacity: .65;
+    }
 
-        .poem-card {
-          padding: 28px 24px;
-          text-align: center;
-          animation: fadeUp 0.8s var(--easing-premium) 0.45s forwards;
-          opacity: 0;
-        }
+    .memory {
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      width: clamp(230px, 29vw, 410px);
+      aspect-ratio: 4 / 5;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(4, 5, 14, .55);
+      box-shadow: 0 30px 90px rgba(0,0,0,.48);
+      overflow: hidden;
+      transform-style: preserve-3d;
+      pointer-events: auto;
+      transition: box-shadow .24s ease, border-color .24s ease;
+    }
 
-        .poem-text {
-          font-family: var(--font-serif);
-          font-size: 1.15rem;
-          line-height: 2;
-          color: var(--text-primary);
-          white-space: pre-line;
-          margin-bottom: 16px;
-        }
+    .memory.current {
+      border-color: rgba(240, 163, 192, .48);
+      box-shadow: 0 36px 130px rgba(0,0,0,.56), 0 0 56px rgba(240, 163, 192, .16);
+    }
 
-        .poem-sig {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          font-style: italic;
-        }
+    .memory img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(1.04) contrast(1.04);
+      transform: scale(1.03);
+    }
 
-        /* Music Bar */
-        .music-bar {
-          position: fixed;
-          bottom: 24px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: calc(100% - 40px);
-          max-width: 440px;
-          background: rgba(18, 16, 40, 0.65);
-          -webkit-backdrop-filter: blur(20px);
-          backdrop-filter: blur(20px);
-          border: 1px solid var(--glass-border);
-          padding: 10px 18px;
-          border-radius: 99px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-          z-index: 100;
-          animation: slideUp 0.6s var(--easing-premium) 0.5s forwards;
-          opacity: 0;
-        }
+    .memory::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 18%, rgba(255,255,255,.12), transparent 18%),
+        linear-gradient(180deg, transparent 42%, rgba(0,0,0,.78));
+    }
 
-        .music-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          overflow: hidden;
-        }
+    .memory-meta {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2;
+      display: grid;
+      gap: 7px;
+    }
 
-        .music-icon-spin {
-          animation: spin 6s linear infinite;
-          opacity: 0.8;
-        }
+    .memory-date {
+      color: rgba(255,255,255,.64);
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
 
-        .music-details {
-          display: flex;
-          flex-direction: column;
-        }
+    .memory-name {
+      font-family: var(--serif);
+      font-size: clamp(22px, 3vw, 36px);
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
 
-        .music-title {
-          font-size: 0.85rem;
-          color: var(--text-primary);
-          white-space: nowrap;
-          font-weight: 500;
-        }
+    .warp-arrow {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      z-index: 1200;
+      width: clamp(92px, 12vw, 176px);
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--soft);
+      opacity: 1;
+      transition: opacity .18s ease;
+    }
 
-        .music-status {
-          font-size: 0.7rem;
-          color: var(--accent-soft);
-        }
+    .warp-arrow::before {
+      content: none;
+    }
 
-        .music-controls {
-          display: flex;
-          gap: 8px;
-        }
+    .arrow-glyph {
+      position: absolute;
+      top: 50%;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      color: transparent;
+      border-top: 1px solid rgba(255,242,238,.5);
+      border-right: 1px solid rgba(255,242,238,.5);
+      line-height: 1;
+      opacity: .28;
+      filter: drop-shadow(0 0 8px rgba(240, 163, 192, .18));
+      transition: opacity .2s ease, border-color .2s ease, filter .2s ease;
+    }
 
-        .control-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
+    .warp-arrow:hover {
+      transform: none;
+    }
 
-        .control-btn:hover {
-          background: rgba(255,255,255,0.1);
-        }
+    .warp-arrow:hover .arrow-glyph,
+    .warp-arrow:focus-visible .arrow-glyph,
+    .warp-arrow:active .arrow-glyph {
+      border-color: rgba(255,242,238,.88);
+      opacity: .92;
+      filter: drop-shadow(0 0 12px rgba(240, 163, 192, .36));
+    }
 
-        .control-btn.primary {
-          background: var(--text-primary);
-          color: var(--bg-deep);
-        }
-        .control-btn.primary:hover {
-          background: #fff;
-          transform: scale(1.05);
-        }
+    .warp-arrow.prev {
+      left: 0;
+      text-align: left;
+    }
 
-        /* Canvas */
-        #fireworks-canvas {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 999;
-        }
+    .warp-arrow.next {
+      right: 0;
+      text-align: right;
+    }
 
-        @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 30px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes auroraBreath {
-          0%, 100% { opacity: 0.7; }
-          50% { opacity: 1; }
-        }
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.6; }
-          35% { opacity: 1; }
-          70% { opacity: 0.5; }
-        }
-    </style>
+    .warp-arrow.prev .arrow-glyph {
+      left: 24px;
+      transform: translateY(-50%) rotate(-135deg);
+    }
+
+    .warp-arrow.next .arrow-glyph {
+      right: 24px;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .soundtrack {
+      position: absolute;
+      top: max(86px, calc(env(safe-area-inset-top) + 72px));
+      right: clamp(18px, 4.5vw, 72px);
+      z-index: 25;
+      width: 56px;
+      height: 56px;
+      border-radius: 44% 56% 48% 52% / 54% 42% 58% 46%;
+      opacity: .86;
+      transition: width .26s ease, height .26s ease, opacity .2s ease;
+    }
+
+    .soundtrack::before {
+      content: "";
+      position: absolute;
+      inset: -9px;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 28% 26%, rgba(255,255,255,.8), transparent 9%),
+        radial-gradient(circle at 58% 62%, rgba(158,201,232,.36), transparent 34%),
+        radial-gradient(circle at 42% 44%, rgba(240,163,192,.54), rgba(103,76,140,.16) 58%, transparent 74%);
+      filter: blur(.2px);
+      box-shadow: 0 0 28px rgba(240, 163, 192, .2), 0 0 62px rgba(158, 201, 232, .11);
+      pointer-events: none;
+      animation: musicPulse 7s ease-in-out infinite alternate;
+    }
+
+    .soundtrack::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 10px;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 250, 247, .72);
+      box-shadow:
+        28px -5px 0 rgba(240,163,192,.5),
+        39px 18px 0 rgba(158,201,232,.38),
+        12px 33px 0 rgba(224,204,145,.42);
+      pointer-events: none;
+    }
+
+    .soundtrack.open {
+      width: min(330px, calc(100vw - 36px));
+      height: 86px;
+      border-radius: 28px;
+      border: 1px solid rgba(255,244,240,.13);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(240, 163, 192, .18), transparent 32%),
+        linear-gradient(135deg, rgba(3, 4, 12, .38), rgba(3, 4, 12, .15));
+      -webkit-backdrop-filter: blur(16px) saturate(1.12);
+      backdrop-filter: blur(16px) saturate(1.12);
+      box-shadow: 0 18px 54px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+      opacity: .92;
+    }
+
+    .music-orb {
+      position: relative;
+      z-index: 2;
+      width: 56px;
+      height: 56px;
+      border-radius: 44% 56% 48% 52% / 54% 42% 58% 46%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 242, 238, .16);
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,.84), transparent 16%),
+        radial-gradient(circle at 55% 57%, rgba(240,163,192,.54), rgba(158,201,232,.24) 68%, rgba(3,4,12,.08));
+      box-shadow: 0 0 24px rgba(240, 163, 192, .2);
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .music-orb:hover {
+      transform: rotate(-6deg) scale(1.03);
+      opacity: .96;
+    }
+
+    .heart-core {
+      position: relative;
+      width: 18px;
+      height: 16px;
+      display: block;
+      transform: rotate(-45deg);
+      background: rgba(255, 242, 238, .78);
+      border-radius: 4px 4px 3px 3px;
+      filter: drop-shadow(0 0 12px rgba(255, 242, 238, .42));
+    }
+
+    .heart-core::before,
+    .heart-core::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255, 250, 247, .78);
+    }
+
+    .heart-core::before {
+      left: 0;
+      top: -9px;
+    }
+
+    .heart-core::after {
+      left: 9px;
+      top: 0;
+    }
+
+    .music-panel {
+      position: absolute;
+      left: 58px;
+      right: 10px;
+      top: 9px;
+      bottom: 9px;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(10px);
+      transition: opacity .18s ease, transform .2s ease;
+    }
+
+    .soundtrack.open .music-panel {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .play {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 242, 238, .18);
+      background: rgba(255, 250, 247, .16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .play-icon {
+      position: relative;
+      display: block;
+      width: 13px;
+      height: 14px;
+    }
+
+    .play-icon::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 1px;
+      width: 0;
+      height: 0;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 9px solid rgba(3, 4, 12, .86);
+    }
+
+    .soundtrack.playing .play-icon::before {
+      left: 2px;
+      top: 0;
+      width: 3px;
+      height: 14px;
+      border: 0;
+      border-radius: 3px;
+      background: rgba(3, 4, 12, .86);
+      box-shadow: 7px 0 0 rgba(3, 4, 12, .86);
+    }
+
+    .track {
+      min-width: 0;
+      flex: 1 1 auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    .track strong {
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .track strong {
+      color: rgba(255, 242, 238, .82);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .volume-wrap {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      color: rgba(255, 242, 238, .42);
+      font-size: 10px;
+      letter-spacing: .12em;
+    }
+
+    .volume-wrap input {
+      width: 100%;
+      accent-color: var(--rose);
+      opacity: .76;
+    }
+
+    .track-next {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,242,238,.12);
+      background: rgba(255,255,255,.02);
+      color: var(--soft);
+      display: grid;
+      place-items: center;
+      opacity: .7;
+      transition: opacity .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .track-next:hover {
+      opacity: .96;
+      border-color: rgba(255,242,238,.28);
+      background: rgba(255,255,255,.06);
+    }
+
+    .next-icon {
+      position: relative;
+      width: 13px;
+      height: 10px;
+      display: block;
+    }
+
+    .next-icon::before,
+    .next-icon::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      width: 7px;
+      height: 7px;
+      border-top: 1px solid rgba(255,242,238,.72);
+      border-right: 1px solid rgba(255,242,238,.72);
+      transform: rotate(45deg);
+    }
+
+    .next-icon::before {
+      left: 0;
+      opacity: .52;
+    }
+
+    .next-icon::after {
+      left: 5px;
+    }
+
+    @keyframes musicPulse {
+      from {
+        transform: rotate(-7deg) scale(.96);
+        opacity: .72;
+      }
+      to {
+        transform: rotate(8deg) scale(1.05);
+        opacity: .94;
+      }
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 3, 10, .9);
+    }
+
+    @keyframes backgroundDrift {
+      from {
+        transform: scale(1.035) translate3d(-1.2%, -.8%, 0);
+      }
+      to {
+        transform: scale(1.08) translate3d(1.2%, .8%, 0);
+      }
+    }
+
+    .lightbox.open {
+      display: grid;
+    }
+
+    .lightbox-card {
+      width: min(100%, 1040px);
+      max-height: 92vh;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #03040a;
+      box-shadow: 0 34px 120px rgba(0,0,0,.56);
+      overflow: hidden;
+    }
+
+    .lightbox-card img {
+      width: 100%;
+      max-height: 76vh;
+      object-fit: contain;
+      display: block;
+      background: #02030a;
+    }
+
+    .lightbox-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .lightbox-title {
+      font-family: var(--serif);
+      font-size: 24px;
+    }
+
+    .lightbox-date {
+      margin-top: 4px;
+      color: var(--dim);
+      font-size: 13px;
+    }
+
+    .close {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+    }
+
+    @media (max-width: 760px) {
+      .mark {
+        left: 16px;
+      }
+
+      .hero {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .timer {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .unit {
+        text-align: center;
+      }
+
+      .warp-ui {
+        top: max(76px, calc(env(safe-area-inset-top) + 62px));
+        left: 16px;
+        right: 16px;
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        justify-content: flex-start;
+      }
+
+      .filter {
+        width: 42px;
+        height: 42px;
+      }
+
+      .soundtrack {
+        top: max(82px, calc(env(safe-area-inset-top) + 64px));
+        right: 16px;
+        width: 56px;
+        height: 56px;
+      }
+
+      .soundtrack.open {
+        width: min(306px, calc(100vw - 32px));
+        height: 86px;
+      }
+
+      .memory {
+        width: min(72vw, 330px);
+        top: 54%;
+      }
+
+      .warp-arrow {
+        width: 28vw;
+        height: auto;
+      }
+
+      .warp-arrow.prev .arrow-glyph {
+        left: 14px;
+      }
+
+      .warp-arrow.next .arrow-glyph {
+        right: 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
+  <div class="space-bg" aria-hidden="true"></div>
+  <canvas id="warpCanvas" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="mark">TDW × LN</div>
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useCallback } from 'react';
-        import { createRoot } from 'react-dom/client';
+  <main>
+    <section class="hero">
+      <div class="countdown">
+        <p class="wish">希望你陪我久一点</p>
+        <div class="timer-label">WE HAVE BEEN TOGETHER</div>
+        <div class="timer" aria-label="我们在一起的时间">
+          <div class="unit"><strong id="days">0</strong><span>Days</span></div>
+          <div class="unit"><strong id="hours">00</strong><span>Hours</span></div>
+          <div class="unit"><strong id="minutes">00</strong><span>Minutes</span></div>
+          <div class="unit"><strong id="seconds">00</strong><span>Seconds</span></div>
+        </div>
+        <div class="anniversary" id="anniversary"></div>
+      </div>
+      <section class="soundtrack" id="soundtrack" aria-label="音乐播放器">
+        <button class="music-orb" id="musicToggle" type="button" aria-label="展开音乐控制" aria-expanded="false"><span class="heart-core" aria-hidden="true"></span></button>
+        <div class="music-panel">
+          <button class="play" id="play" type="button" aria-label="播放音乐"><span class="play-icon" aria-hidden="true"></span></button>
+          <div class="track">
+            <strong id="trackName">我只在乎你</strong>
+            <label class="volume-wrap" for="volumeControl">
+              <span>VOL</span>
+              <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.62" aria-label="音量">
+            </label>
+          </div>
+          <button class="track-next" id="nextTrack" type="button" aria-label="下一首"><span class="next-icon" aria-hidden="true"></span></button>
+        </div>
+      </section>
+      <a class="warp-link" href="#warp">TIME WARP</a>
+    </section>
 
-        /* === CONFIG === */
-        const CONFIG = {
-            herName: "（刘念）",
-            mySig: "（唐德威）",
-            since: "2025-05-30T22:00:00",
-            subtitle: "愿我们把平凡的日子，过成只属于彼此的诗。",
-            poem: `希望你陪我久一点`,
-            photos: [
-                { src: "photos/01.jpg", cap: "那天的风很轻，你的笑很亮。" },
-                { src: "photos/02.jpg", cap: "你回头的一瞬间，我就知道完了。" },
-                { src: "photos/03.jpg", cap: "这一天，时间都慢了一点。" },
-                { src: "photos/04.jpg", cap: "我喜欢你笑起来的样子。" },
-                { src: "photos/05.jpg", cap: "和你在一起，世界很安静。" },
-                { src: "photos/06.jpg", cap: "路灯下，我们并肩走着。" },
-                { src: "photos/07.jpg", cap: "你的手，很暖。" },
-                { src: "photos/08.jpg", cap: "我希望这样的日子有很多很多。" }
-            ],
-            musics: [
-                { src: "我只在乎你.mp3", name: "我只在乎你" },
-                { src: "至少还有你.mp3", name: "至少还有你" }
-            ],
-            volume: 0.6
+    <section class="warp" id="warp">
+      <div class="warp-stage" id="warpStage">
+        <div class="warp-ui">
+          <div class="warp-title">
+            <small>Memory corridor</small>
+          </div>
+          <nav class="filters" aria-label="照片分类">
+            <button class="filter active" type="button" data-world="us" aria-label="合照" aria-pressed="true" title="合照">
+              <span class="category-icon people" aria-hidden="true">
+                <svg viewBox="0 0 32 32">
+                  <path d="M10.7 11.6a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"/>
+                  <path d="M21.9 12.2a4.7 4.7 0 1 0 0-9.4 4.7 4.7 0 0 0 0 9.4Z"/>
+                  <path d="M4.8 27.5c.8-6.2 3.2-9.2 6.2-9.2 2.1 0 3.8 1.3 4.9 3.8"/>
+                  <path d="M15.4 27.5c.6-7.1 3.1-10.3 6.7-10.3s6.1 3.3 6.7 10.3"/>
+                  <path d="M14.3 16.8c1.5 1.2 3.1 1.2 4.7 0"/>
+                </svg>
+              </span>
+            </button>
+            <button class="filter active" type="button" data-world="eating" aria-label="吃的" aria-pressed="true" title="吃的">
+              <span class="category-icon food" aria-hidden="true">🍚</span>
+            </button>
+            <button class="filter active" type="button" data-world="lucky" aria-label="Lucky" aria-pressed="true" title="Lucky">
+              <span class="category-icon lucky" aria-hidden="true">
+                <svg viewBox="0 0 32 32">
+                  <path d="M7.3 12.4 5.2 6.1l6.2 3.1"/>
+                  <path d="M24.7 12.4 26.8 6l-6.2 3.1"/>
+                  <path d="M6.2 17.6c0-6.3 4.5-10.2 9.8-10.2s9.8 3.9 9.8 10.2c0 5.5-3.9 9.3-9.8 9.3s-9.8-3.8-9.8-9.3Z"/>
+                  <path d="M12.2 16.9h.1"/>
+                  <path d="M19.8 16.9h.1"/>
+                  <path d="M16 19.2v2.2"/>
+                  <path d="M12.5 21.8c1.7 1.3 2.9 1.3 3.5-.3.6 1.6 1.8 1.6 3.5.3"/>
+                  <path d="M7.3 19.5 2.8 18.3"/>
+                  <path d="M7.5 22.1 3.4 23.7"/>
+                  <path d="M24.7 19.5l4.5-1.2"/>
+                  <path d="M24.5 22.1l4.1 1.6"/>
+                </svg>
+              </span>
+            </button>
+          </nav>
+        </div>
+        <div class="tunnel-axis" aria-hidden="true"></div>
+        <div class="time-tunnel" id="timeTunnel"></div>
+        <button class="warp-arrow prev" id="prevMemory" type="button" aria-label="上一张" data-dir="prev"><span class="arrow-glyph"></span></button>
+        <button class="warp-arrow next" id="nextMemory" type="button" aria-label="下一张" data-dir="next"><span class="arrow-glyph"></span></button>
+      </div>
+    </section>
+  </main>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="照片详情">
+    <div class="lightbox-card">
+      <img id="lightboxImage" src="" alt="">
+      <div class="lightbox-meta">
+        <div>
+          <div class="lightbox-title" id="lightboxTitle"></div>
+          <div class="lightbox-date" id="lightboxDate"></div>
+        </div>
+        <button class="close" id="closeLightbox" type="button" aria-label="关闭">×</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SINCE = new Date("2025-05-30T22:00:00");
+
+    const worlds = {
+      us: {
+        title: "合照",
+        folder: "us",
+        files: [
+          "2025-5-31.jpg",
+          "2025-6-1德州欧乐堡.jpg",
+          "2025-6-1德州欧乐堡2.jpg",
+          "2025-6-1德州欧乐堡3.jpg",
+          "2025-6-2.jpg",
+          "2025-6-2趵突泉.jpg",
+          "2025-7-12LC.jpg",
+          "2025-7-14云龙山索道.jpg",
+          "2025-7-14云龙山索道2.jpg",
+          "2025-9-13云龙湖.jpg",
+          "2025-10-3南京.jpg",
+          "2025-10-3南京2.jpg",
+          "2026-1-1文庙.jpg",
+          "2026-1-3文庙.jpg",
+          "2026-5-4写真.jpg",
+          "2026-5-4写真2.jpg"
+        ]
+      },
+      eating: {
+        title: "一起吃过",
+        folder: "eating",
+        files: [
+          "2025-7-11铜山亚朵.jpg",
+          "2025-7-14难吃.jpg",
+          "2025-7-24铜山三只羊.jpg",
+          "2025-8-9苏宁什一.jpg",
+          "2025-8-10家.jpg",
+          "2025-8-16逅暮.jpg",
+          "2025-9-13盒马外.jpg",
+          "2025-9-14盒马.jpg",
+          "2025-9-20家.jpg",
+          "2025-9-30家.jpg",
+          "2025-10-1日料.jpg",
+          "2025-11-29家.jpg",
+          "2025-11-30家.jpg",
+          "2025-12-4家.jpg",
+          "2026-1-1家.jpg",
+          "2026-1-2家.jpg",
+          "2026-4-6家.jpg",
+          "2026-5-1云龙湖.jpg",
+          "2026-5-2家.jpg",
+          "2026-5-3家.jpg",
+          "2026-5-3滨寿司.jpg",
+          "2026-5-4家.jpg"
+        ]
+      },
+      lucky: {
+        title: "Lucky",
+        folder: "lucky",
+        files: [
+          "2025-8-9.jpg",
+          "2025-9-23.jpg",
+          "2025-11-11.jpg",
+          "2025-11-21.jpg"
+        ]
+      }
+    };
+
+    const tracks = [
+      { src: "我只在乎你.mp3", name: "我只在乎你" },
+      { src: "至少还有你.mp3", name: "至少还有你" }
+    ];
+
+    const refs = {
+      days: document.getElementById("days"),
+      hours: document.getElementById("hours"),
+      minutes: document.getElementById("minutes"),
+      seconds: document.getElementById("seconds"),
+      anniversary: document.getElementById("anniversary"),
+      warp: document.getElementById("warp"),
+      tunnel: document.getElementById("timeTunnel"),
+      lightbox: document.getElementById("lightbox"),
+      lightboxImage: document.getElementById("lightboxImage"),
+      lightboxTitle: document.getElementById("lightboxTitle"),
+      lightboxDate: document.getElementById("lightboxDate"),
+      soundtrack: document.getElementById("soundtrack"),
+      musicToggle: document.getElementById("musicToggle"),
+      play: document.getElementById("play"),
+      trackName: document.getElementById("trackName"),
+      volume: document.getElementById("volumeControl")
+    };
+
+    let memories = [];
+    let selectedWorlds = new Set(["us", "eating", "lucky"]);
+    let activeTrack = 0;
+    let currentPosition = 0;
+    let targetPosition = 0;
+    let warpBoost = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartPosition = 0;
+    let dragDistance = 0;
+    let suppressCardClick = false;
+
+    const audio = new Audio(tracks[0].src);
+    audio.volume = .62;
+    audio.loop = true;
+
+    function pad(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function parseMemory(worldKey, file) {
+      const world = worlds[worldKey];
+      const match = file.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(.*)\.jpg$/i);
+      if (!match) {
+        return {
+          world: worldKey,
+          src: `photos/${world.folder}/${file}`,
+          name: file.replace(/\.jpg$/i, ""),
+          date: "",
+          sort: ""
         };
+      }
+      const [, y, m, d, rawName] = match;
+      return {
+        world: worldKey,
+        src: `photos/${world.folder}/${file}`,
+        name: rawName.trim() || world.title,
+        date: `${y}.${pad(m)}.${pad(d)}`,
+        sort: `${y}-${pad(m)}-${pad(d)}`
+      };
+    }
 
-        /* === ICONS === */
-        const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l11-7z"/></svg>);
-        const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>);
-        const NextIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>);
-        const ChevronLeftIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>);
-        const ChevronRightIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>);
-        const MusicNoteIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>);
-        const SparklesIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>);
+    function memoriesFor(worldKeys) {
+      return worldKeys
+        .flatMap((worldKey) => worlds[worldKey].files.map((file) => parseMemory(worldKey, file)))
+        .sort((a, b) => a.sort.localeCompare(b.sort));
+    }
 
-        /* === COMPONENTS === */
+    function updateTime() {
+      let diff = Math.max(0, Date.now() - SINCE.getTime());
+      const days = Math.floor(diff / 86400000);
+      diff -= days * 86400000;
+      const hours = Math.floor(diff / 3600000);
+      diff -= hours * 3600000;
+      const minutes = Math.floor(diff / 60000);
+      diff -= minutes * 60000;
+      const seconds = Math.floor(diff / 1000);
 
-        const TimeCapsule = () => {
-            const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+      refs.days.textContent = days;
+      refs.hours.textContent = pad(hours);
+      refs.minutes.textContent = pad(minutes);
+      refs.seconds.textContent = pad(seconds);
 
-            useEffect(() => {
-                const sinceMs = new Date(CONFIG.since).getTime();
-                const tick = () => {
-                    const now = Date.now();
-                    let diff = Math.max(0, now - sinceMs);
-                    
-                    const d = Math.floor(diff / (24*3600*1000)); diff -= d*24*3600*1000;
-                    const h = Math.floor(diff / (3600*1000)); diff -= h*3600*1000;
-                    const m = Math.floor(diff / (60*1000)); diff -= m*60*1000;
-                    const s = Math.floor(diff / 1000);
-                    
-                    setTimeLeft({ d, h, m, s });
-                };
-                const timer = setInterval(tick, 1000);
-                tick();
-                return () => clearInterval(timer);
-            }, []);
+      const nextAnniversary = getNextAnniversary(new Date());
+      const remain = nextAnniversary.date.getTime() - Date.now();
+      if (remain > 0) {
+        const total = Math.floor(remain / 1000);
+        const d = Math.floor(total / 86400);
+        const h = Math.floor((total % 86400) / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        refs.anniversary.textContent = `距离${anniversaryName(nextAnniversary.year)}周年还有 ${d} 天 ${pad(h)} 小时 ${pad(m)} 分 ${pad(s)} 秒`;
+      } else {
+        const d = Math.floor(Math.abs(remain) / 86400000);
+        refs.anniversary.textContent = `${anniversaryName(nextAnniversary.year)}周年已经抵达，我们又一起往前走了 ${d} 天`;
+      }
+    }
 
-            const format = (n) => String(n).padStart(2, '0');
+    function anniversaryName(year) {
+      const names = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+      if (year <= 10) return names[year];
+      return String(year);
+    }
 
-            return (
-                <div className="glass-panel counter-card">
-                    <div className="counter-label">We have been together for</div>
-                    <div className="counter-grid">
-                        <div className="time-unit">
-                            <span className="time-value">{timeLeft.d}</span>
-                            <span className="time-label">DAYS</span>
-                        </div>
-                        <span className="time-colon">:</span>
-                        <div className="time-unit">
-                            <span className="time-value">{format(timeLeft.h)}</span>
-                            <span className="time-label">HRS</span>
-                        </div>
-                        <span className="time-colon">:</span>
-                        <div className="time-unit">
-                            <span className="time-value">{format(timeLeft.m)}</span>
-                            <span className="time-label">MIN</span>
-                        </div>
-                        <span className="time-colon">:</span>
-                        <div className="time-unit">
-                            <span className="time-value">{format(timeLeft.s)}</span>
-                            <span className="time-label">SEC</span>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+    function getNextAnniversary(now) {
+      let year = now.getFullYear() - SINCE.getFullYear();
+      if (year < 1) year = 1;
 
-        const Gallery = ({ photos }) => {
-            const [index, setIndex] = useState(0);
-            const [isFading, setIsFading] = useState(false);
-            
-            useEffect(() => {
-                photos.forEach(p => { const img = new Image(); img.src = p.src; });
-            }, [photos]);
+      let date = new Date(SINCE);
+      date.setFullYear(SINCE.getFullYear() + year);
 
-            const changePhoto = useCallback((newIndex) => {
-                if (isFading) return;
-                setIsFading(true);
-                setTimeout(() => {
-                    setIndex((newIndex + photos.length) % photos.length);
-                    setIsFading(false);
-                }, 300);
-            }, [isFading, photos.length]);
+      if (date.getTime() <= now.getTime()) {
+        year += 1;
+        date = new Date(SINCE);
+        date.setFullYear(SINCE.getFullYear() + year);
+      }
 
-            const next = () => changePhoto(index + 1);
-            const prev = () => changePhoto(index - 1);
+      return { year, date };
+    }
 
-            const touchStart = useRef(null);
-            const onTouchStart = (e) => touchStart.current = e.touches[0].clientX;
-            const onTouchEnd = (e) => {
-                if (!touchStart.current) return;
-                const diff = e.changedTouches[0].clientX - touchStart.current;
-                if (Math.abs(diff) > 50) {
-                    diff > 0 ? prev() : next();
-                }
-                touchStart.current = null;
-            };
+    function buildTunnel(shouldScroll = true) {
+      const activeKeys = Array.from(selectedWorlds);
+      memories = memoriesFor(activeKeys);
+      refs.tunnel.innerHTML = "";
 
-            const currentPhoto = photos[index];
+      document.querySelectorAll(".filter").forEach((filter) => {
+        const selected = selectedWorlds.has(filter.dataset.world);
+        filter.classList.toggle("active", selected);
+        filter.setAttribute("aria-pressed", String(selected));
+      });
 
-            return (
-                <div
-                    className="glass-panel gallery-section"
-                    onTouchStart={onTouchStart}
-                    onTouchEnd={onTouchEnd}
-                >
-                    <img
-                        src={currentPhoto.src}
-                        alt="Memory"
-                        className="gallery-image"
-                        style={{ opacity: isFading ? 0.3 : 1 }}
-                    />
+      const fragment = document.createDocumentFragment();
+      memories.forEach((memory, index) => {
+        const card = document.createElement("button");
+        card.className = "memory";
+        card.type = "button";
+        card.dataset.index = index;
+        card.innerHTML = `
+          <img src="${memory.src}" alt="${memory.name}" loading="lazy">
+          <span class="memory-meta">
+            <span class="memory-date">${memory.date} / ${memory.world.toUpperCase()}</span>
+            <span class="memory-name">${memory.name}</span>
+          </span>
+        `;
+        card.addEventListener("click", () => {
+          if (suppressCardClick) return;
+          openLightbox(memory);
+        });
+        fragment.appendChild(card);
+      });
+      refs.tunnel.appendChild(fragment);
+      targetPosition = 0;
+      currentPosition = 0;
+      updateCards();
+      if (shouldScroll) {
+        requestAnimationFrame(() => refs.warp.scrollIntoView({ behavior: "smooth", block: "start" }));
+      }
+    }
 
-                    <button className="gallery-nav-btn prev" onClick={(e) => {e.stopPropagation(); prev();}}>
-                        <ChevronLeftIcon />
-                    </button>
-                    <button className="gallery-nav-btn next" onClick={(e) => {e.stopPropagation(); next();}}>
-                        <ChevronRightIcon />
-                    </button>
+    function toggleWorld(worldKey) {
+      if (selectedWorlds.has(worldKey)) {
+        if (selectedWorlds.size === 1) return;
+        selectedWorlds.delete(worldKey);
+      } else {
+        selectedWorlds.add(worldKey);
+      }
+      buildTunnel();
+    }
 
-                    <div className="gallery-dots">
-                        {photos.map((_, i) => (
-                            <div key={i} className={`gallery-dot ${i === index ? 'active' : ''}`} />
-                        ))}
-                    </div>
+    function clampPosition(value) {
+      return Math.min(Math.max(0, value), Math.max(0, memories.length - 1));
+    }
 
-                    <div className="gallery-overlay">
-                        <div className="gallery-caption" key={index}>
-                            {currentPhoto.cap}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+    function setTunnelPosition(value, boost = 1) {
+      const next = clampPosition(value);
+      warpBoost = Math.min(2.4, warpBoost + Math.abs(next - targetPosition) * .42 + boost);
+      targetPosition = next;
+    }
 
-        const MusicPlayer = ({ onFireworks }) => {
-            const [playing, setPlaying] = useState(false);
-            const [trackIdx, setTrackIdx] = useState(0);
-            const audioRef = useRef(null);
+    function moveTunnel(delta) {
+      const base = Math.abs(targetPosition - currentPosition) > .35 ? currentPosition : targetPosition;
+      setTunnelPosition(base + delta, Math.abs(delta) * .36);
+    }
 
-            useEffect(() => {
-                const audio = new Audio();
-                audio.volume = CONFIG.volume;
-                audio.loop = true;
-                audioRef.current = audio;
-                return () => { audio.pause(); };
-            }, []);
+    function updateCards() {
+      const cards = refs.tunnel.querySelectorAll(".memory");
+      const nearest = Math.round(currentPosition);
 
-            useEffect(() => {
-                if (audioRef.current) {
-                    const wasPlaying = !audioRef.current.paused;
-                    audioRef.current.src = CONFIG.musics[trackIdx].src;
-                    if (wasPlaying || playing) {
-                         audioRef.current.play().catch(() => setPlaying(false));
-                    }
-                }
-            }, [trackIdx]);
+      cards.forEach((card) => {
+        const index = Number(card.dataset.index);
+        const offset = index - currentPosition;
+        const distance = Math.abs(offset);
+        const visible = distance < 5.7;
 
-            const togglePlay = () => {
-                if (!audioRef.current) return;
-                if (playing) {
-                    audioRef.current.pause();
-                } else {
-                    audioRef.current.play().catch(e => console.log("Playback prevented", e));
-                }
-                setPlaying(!playing);
-            };
+        card.hidden = !visible;
+        if (!visible) return;
 
-            const nextSong = () => {
-                setTrackIdx((prev) => (prev + 1) % CONFIG.musics.length);
-                setPlaying(true);
-            };
+        const side = offset < 0 ? -1 : 1;
+        const abs = Math.abs(offset);
+        const x = Math.sin(offset * .88) * 310 + offset * 90;
+        const y = Math.sin(offset * .45) * 62;
+        const z = 180 - abs * 360;
+        const rotateY = -offset * 12;
+        const rotateX = offset * 2.8;
+        const rotateZ = side * Math.min(9, abs * 3.2);
+        const scale = Math.max(.48, 1 - abs * .105);
+        const opacity = Math.max(0, 1 - abs * .18);
+        const blur = Math.min(8, abs * 1.15);
 
-            return (
-                <div className="music-bar">
-                    <div className="music-info">
-                        <div className={`music-icon-circle ${playing ? 'music-icon-spin' : ''}`} 
-                             style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <MusicNoteIcon />
-                        </div>
-                        <div className="music-details">
-                            <span className="music-title">{CONFIG.musics[trackIdx].name}</span>
-                            <span className="music-status">{playing ? 'Playing' : 'Paused'}</span>
-                        </div>
-                    </div>
-                    
-                    <div className="music-controls">
-                        <button className="control-btn" onClick={onFireworks} title="Fireworks">
-                            <SparklesIcon />
-                        </button>
-                        <button className="control-btn" onClick={nextSong} title="Next Song">
-                            <NextIcon />
-                        </button>
-                        <button className="control-btn primary" onClick={togglePlay}>
-                            {playing ? <PauseIcon /> : <PlayIcon />}
-                        </button>
-                    </div>
-                </div>
-            );
-        };
+        card.classList.toggle("current", index === nearest);
+        card.style.opacity = opacity.toFixed(3);
+        card.style.filter = `blur(${blur}px)`;
+        card.style.zIndex = String(1000 - Math.round(abs * 20));
+        card.style.transform = `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+      });
+    }
 
-        const FireworksCanvas = ({ trigger }) => {
-            const canvasRef = useRef(null);
+    function animateTunnel() {
+      currentPosition += (targetPosition - currentPosition) * .085;
+      updateCards();
+      requestAnimationFrame(animateTunnel);
+    }
 
-            useEffect(() => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return;
+    function openLightbox(memory) {
+      refs.lightboxImage.src = memory.src;
+      refs.lightboxImage.alt = memory.name;
+      refs.lightboxTitle.textContent = memory.name;
+      refs.lightboxDate.textContent = `${memory.date} / ${memory.world.toUpperCase()}`;
+      refs.lightbox.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
 
-                let particles = [];
-                let animationId = 0;
+    function closeLightbox() {
+      refs.lightbox.classList.remove("open");
+      refs.lightboxImage.src = "";
+      document.body.style.overflow = "";
+    }
 
-                const resize = () => {
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                };
-                window.addEventListener('resize', resize);
-                resize();
+    function syncTrack() {
+      audio.src = tracks[activeTrack].src;
+      refs.trackName.textContent = tracks[activeTrack].name;
+    }
 
-                const createParticle = (x, y) => {
-                    const hue = Math.random() * 40 + 320; 
-                    return {
-                        x, y,
-                        vx: (Math.random() - 0.5) * 6,
-                        vy: (Math.random() - 0.5) * 6,
-                        life: 100 + Math.random() * 50,
-                        color: `hsla(${hue}, 80%, 70%,`,
-                        alpha: 1,
-                        gravity: 0.05
-                    };
-                };
+    function setMusicOpen(open) {
+      refs.soundtrack.classList.toggle("open", open);
+      refs.musicToggle.setAttribute("aria-expanded", String(open));
+      refs.musicToggle.setAttribute("aria-label", open ? "收起音乐控制" : "展开音乐控制");
+    }
 
-                const burst = () => {
-                     const x = Math.random() * canvas.width;
-                     const y = Math.random() * (canvas.height * 0.6);
-                     for(let i=0; i<80; i++) particles.push(createParticle(x, y));
-                };
+    function playMusic() {
+      audio.play().then(() => {
+        refs.soundtrack.classList.add("playing");
+        refs.play.setAttribute("aria-label", "暂停音乐");
+      }).catch(() => {
+        refs.play.setAttribute("aria-label", "再次点击播放音乐");
+      });
+    }
 
-                if (trigger > 0) {
-                    burst();
-                    setTimeout(burst, 300); 
-                }
+    function pauseMusic() {
+      audio.pause();
+      refs.soundtrack.classList.remove("playing");
+      refs.play.setAttribute("aria-label", "播放音乐");
+    }
 
-                const loop = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    for (let i = particles.length - 1; i >= 0; i--) {
-                        const p = particles[i];
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.vy += p.gravity;
-                        p.life--;
-                        p.alpha = Math.max(0, p.life / 100);
+    document.querySelectorAll(".filter").forEach((filter) => {
+      filter.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleWorld(filter.dataset.world);
+      });
+    });
 
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                        ctx.fillStyle = `${p.color} ${p.alpha})`;
-                        ctx.fill();
+    refs.musicToggle.addEventListener("click", () => {
+      setMusicOpen(!refs.soundtrack.classList.contains("open"));
+    });
 
-                        if (p.life <= 0) particles.splice(i, 1);
-                    }
-                    
-                    animationId = requestAnimationFrame(loop);
-                };
-                loop();
+    refs.play.addEventListener("click", () => {
+      if (audio.paused) playMusic();
+      else pauseMusic();
+    });
 
-                return () => {
-                    cancelAnimationFrame(animationId);
-                    window.removeEventListener('resize', resize);
-                };
-            }, [trigger]);
+    refs.volume.addEventListener("input", () => {
+      audio.volume = Number(refs.volume.value);
+    });
 
-            return <canvas id="fireworks-canvas" ref={canvasRef} />;
-        };
+    document.getElementById("nextTrack").addEventListener("click", () => {
+      const wasPlaying = !audio.paused;
+      activeTrack = (activeTrack + 1) % tracks.length;
+      syncTrack();
+      if (wasPlaying) playMusic();
+    });
 
-        function App() {
-            const [fireworkTrigger, setFireworkTrigger] = useState(0);
+    document.getElementById("closeLightbox").addEventListener("click", closeLightbox);
+    refs.lightbox.addEventListener("click", (event) => {
+      if (event.target === refs.lightbox) closeLightbox();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeLightbox();
+    });
 
-            const handleFireworks = () => {
-                setFireworkTrigger(prev => prev + 1);
-            };
+    const warpStage = document.getElementById("warpStage");
 
-            return (
-                <div className="app-container">
-                    <FireworksCanvas trigger={fireworkTrigger} />
+    warpStage.addEventListener("pointerdown", (event) => {
+      if (refs.lightbox.classList.contains("open")) return;
+      if (event.target.closest(".warp-ui, .warp-arrow")) return;
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragStartPosition = targetPosition;
+      dragDistance = 0;
+      suppressCardClick = false;
+      warpStage.classList.add("dragging");
+      warpStage.setPointerCapture(event.pointerId);
+    });
 
-                    <header>
-                        <h1 className="main-title">
-                            从那天起，每个日子都有了意义
-                        </h1>
-                        <div className="subtitle">{CONFIG.subtitle}</div>
-                    </header>
+    warpStage.addEventListener("pointermove", (event) => {
+      if (!isDragging) return;
+      dragDistance = event.clientX - dragStartX;
+      if (Math.abs(dragDistance) > 8) suppressCardClick = true;
+      setTunnelPosition(dragStartPosition - dragDistance / 260, Math.abs(dragDistance) * .002);
+    });
 
-                    <div className="flow-column">
-                        <Gallery photos={CONFIG.photos} />
-                        <TimeCapsule />
-                        <div className="glass-panel poem-card">
-                            <div className="poem-text">{CONFIG.poem}</div>
-                            <div className="poem-sig">—— {CONFIG.mySig}</div>
-                        </div>
-                    </div>
+    function endDrag(event) {
+      if (!isDragging) return;
+      isDragging = false;
+      warpStage.classList.remove("dragging");
+      targetPosition = clampPosition(Math.round(targetPosition));
+      if (warpStage.hasPointerCapture(event.pointerId)) {
+        warpStage.releasePointerCapture(event.pointerId);
+      }
+      window.setTimeout(() => {
+        suppressCardClick = false;
+      }, 80);
+    }
 
-                    <MusicPlayer onFireworks={handleFireworks} />
-                </div>
-            );
+    warpStage.addEventListener("pointerup", endDrag);
+    warpStage.addEventListener("pointercancel", endDrag);
+
+    warpStage.addEventListener("wheel", (event) => {
+      const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+      const delta = horizontal ? event.deltaX : event.shiftKey ? event.deltaY : 0;
+      if (!delta) return;
+      event.preventDefault();
+      moveTunnel(delta / 260);
+    }, { passive: false });
+
+    document.getElementById("prevMemory").addEventListener("pointerdown", (event) => event.stopPropagation());
+    document.getElementById("nextMemory").addEventListener("pointerdown", (event) => event.stopPropagation());
+    document.getElementById("prevMemory").addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      moveTunnel(-1.15);
+    });
+    document.getElementById("nextMemory").addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      moveTunnel(1.15);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (refs.lightbox.classList.contains("open")) return;
+      if (event.key === "ArrowLeft") moveTunnel(-1);
+      if (event.key === "ArrowRight") moveTunnel(1);
+    });
+
+    const canvas = document.getElementById("warpCanvas");
+    const ctx = canvas.getContext("2d", { alpha: true });
+    let width = 0;
+    let height = 0;
+    let ratio = 1;
+    let staticStars = [];
+    let warpStars = [];
+
+    function resetWarpStar(star, randomZ = true) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.pow(Math.random(), .55) * Math.max(width, height) * .62;
+      star.x = Math.cos(angle) * radius;
+      star.y = Math.sin(angle) * radius;
+      star.z = randomZ ? Math.random() * 1.15 + .16 : 1.25;
+      star.vx = (Math.random() - .5) * .42;
+      star.vy = (Math.random() - .5) * .34;
+      star.vz = Math.random() * .0019 + .0007;
+      star.wander = Math.random() * Math.PI * 2;
+      star.wanderSpeed = Math.random() * .018 + .006;
+      star.size = Math.random() * 1.15 + .28;
+      star.glow = Math.random() > .64;
+      star.tone = Math.random() > .72 ? "240,163,192" : Math.random() > .48 ? "158,201,232" : Math.random() > .24 ? "224,204,145" : "255,250,247";
+    }
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      ratio = Math.min(window.devicePixelRatio || 1, 1.75);
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      staticStars = Array.from({ length: Math.min(760, Math.floor(width * height / 1900)) }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 1.7 + .22,
+        a: Math.random() * .82 + .22,
+        glow: Math.random() > .82,
+        tone: Math.random() > .76 ? "240,163,192" : Math.random() > .52 ? "158,201,232" : Math.random() > .32 ? "224,204,145" : "255,250,247"
+      }));
+
+      warpStars = Array.from({ length: Math.min(460, Math.floor(width * height / 3300)) }, () => {
+        const star = {};
+        resetWarpStar(star, true);
+        return star;
+      });
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, width, height);
+
+      staticStars.forEach((star, index) => {
+        const pulse = Math.sin(performance.now() * .001 + index) * .22;
+        const alpha = Math.max(.08, star.a + pulse);
+        if (star.glow) {
+          ctx.save();
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = `rgba(${star.tone},.72)`;
+        }
+        ctx.fillStyle = `rgba(${star.tone},${alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (star.glow) {
+          ctx.strokeStyle = `rgba(${star.tone},${alpha * .45})`;
+          ctx.lineWidth = .6;
+          ctx.beginPath();
+          ctx.moveTo(star.x - star.r * 4.2, star.y);
+          ctx.lineTo(star.x + star.r * 4.2, star.y);
+          ctx.moveTo(star.x, star.y - star.r * 4.2);
+          ctx.lineTo(star.x, star.y + star.r * 4.2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+
+      const centerX = width * .5;
+      const centerY = height * .47;
+      const speed = .0014 + warpBoost * .0038;
+      warpBoost *= .965;
+
+      warpStars.forEach((star) => {
+        const prevZ = star.z;
+        const prevX = star.x;
+        const prevY = star.y;
+        star.wander += star.wanderSpeed;
+        star.x += star.vx + Math.sin(star.wander) * .12;
+        star.y += star.vy + Math.cos(star.wander * .8) * .1;
+        star.z -= speed + star.vz;
+        if (star.z <= .045) resetWarpStar(star, false);
+
+        const x = centerX + star.x / star.z * .18;
+        const y = centerY + star.y / star.z * .18;
+        const px = centerX + prevX / prevZ * .18;
+        const py = centerY + prevY / prevZ * .18;
+        const alpha = Math.min(1, (1.04 - star.z) * .95);
+        const size = star.size * (1.28 - star.z) * 1.05;
+
+        if (x < -40 || x > width + 40 || y < -40 || y > height + 40) {
+          resetWarpStar(star, false);
+          return;
         }
 
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        ctx.save();
+        if (star.glow) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = `rgba(${star.tone},.62)`;
+        }
+        ctx.strokeStyle = `rgba(${star.tone},${alpha * (.3 + warpBoost * .34)})`;
+        ctx.lineWidth = Math.max(.42, size * 1.05);
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(${star.tone},${Math.min(1, alpha * 1.1)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(.46, size * .68), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      const vignette = ctx.createRadialGradient(width * .5, height * .48, Math.min(width, height) * .08, width * .5, height * .5, Math.max(width, height) * .68);
+      vignette.addColorStop(0, "rgba(255,255,255,0)");
+      vignette.addColorStop(.58, "rgba(0,0,0,.08)");
+      vignette.addColorStop(1, "rgba(0,0,0,.62)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, width, height);
+
+      requestAnimationFrame(drawBackground);
+    }
+
+    window.addEventListener("resize", resizeCanvas, { passive: true });
+
+    resizeCanvas();
+    drawBackground();
+    updateTime();
+    setInterval(updateTime, 1000);
+    buildTunnel(false);
+    window.scrollTo({ top: 0 });
+    animateTunnel();
+  </script>
 </body>
 </html>
